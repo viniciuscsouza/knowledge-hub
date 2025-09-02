@@ -10,6 +10,7 @@ import {
   doc,
   query,
   orderBy,
+  getCountFromServer,
 } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import styles from './TopicManager.module.css';
@@ -17,6 +18,7 @@ import styles from './TopicManager.module.css';
 interface Topic {
   id: string;
   title: string;
+  itemCount: number;
 }
 
 interface TopicManagerProps {
@@ -34,11 +36,24 @@ export default function TopicManager({ searchQuery }: TopicManagerProps) {
         collection(db, 'users', user.uid, 'topics'),
         orderBy('timestamp', 'desc')
       );
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const topicsData: Topic[] = [];
-        querySnapshot.forEach((doc) => {
-          topicsData.push({ id: doc.id, ...doc.data() } as Topic);
+      const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        const topicsPromises = querySnapshot.docs.map(async (doc) => {
+          const resourcesCollection = collection(
+            db,
+            'users',
+            user.uid,
+            'topics',
+            doc.id,
+            'resources'
+          );
+          const snapshot = await getCountFromServer(resourcesCollection);
+          return {
+            id: doc.id,
+            ...doc.data(),
+            itemCount: snapshot.data().count,
+          } as Topic;
         });
+        const topicsData = await Promise.all(topicsPromises);
         setTopics(topicsData);
         setLoading(false);
       });
@@ -82,7 +97,9 @@ export default function TopicManager({ searchQuery }: TopicManagerProps) {
               </button>
               <Link href={`/topic?id=${topic.id}`} className={styles.cardLink}>
                 <h3 className={styles.cardTitle}>{topic.title}</h3>
-                <p className={styles.cardDescription}>0 itens cadastrados</p>
+                <p className={styles.cardDescription}>
+                  {topic.itemCount} {topic.itemCount === 1 ? 'item cadastrado' : 'itens cadastrados'}
+                </p>
               </Link>
             </div>
           </div>
