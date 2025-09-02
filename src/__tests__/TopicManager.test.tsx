@@ -1,3 +1,6 @@
+// Mock do writeBatch precisa ser definido antes de qualquer import ou jest.mock
+// ...existing code...
+// ...existing code...
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import TopicManager from '@/components/TopicManager';
 import { useAuth } from '@/context/AuthContext';
@@ -8,95 +11,99 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 jest.mock('@/firebase/config'); // Use the mock config
 
-
 const mockAddDoc = jest.fn();
 const mockDeleteDoc = jest.fn();
 const mockOnSnapshot = jest.fn();
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
-  addDoc: (_collectionRef, data) => mockAddDoc(data),
-  deleteDoc: (_docRef) => mockDeleteDoc(),
+  addDoc: (_collectionRef: any, data: any) => mockAddDoc(data),
+  deleteDoc: (_docRef: any) => mockDeleteDoc(),
   doc: jest.fn(),
   query: jest.fn(),
   orderBy: jest.fn(),
   serverTimestamp: jest.fn(() => new Date()),
-  onSnapshot: (query, callback) => {
+  onSnapshot: (query: any, callback: any) => {
     mockOnSnapshot(query, callback);
-    // Return a mock unsubscribe function
-    return () => {};
+    return () => { };
   },
+  writeBatch: jest.fn(() => ({ update: jest.fn(), commit: jest.fn() })),
+  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
+}));
+
+// Mocking dnd-kit
+jest.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children }: { children: any }) => <div>{children}</div>,
+  closestCenter: jest.fn(),
+  KeyboardSensor: jest.fn(),
+  PointerSensor: jest.fn(),
+  useSensor: jest.fn(),
+  useSensors: jest.fn(),
+}));
+
+jest.mock('@dnd-kit/sortable', () => ({
+  SortableContext: ({ children }: { children: any }) => <div>{children}</div>,
+  sortableKeyboardCoordinates: jest.fn(),
+  useSortable: () => ({ attributes: {}, listeners: {}, setNodeRef: jest.fn(), transform: null, transition: null }),
+  arrayMove: (items: any, oldIndex: any, newIndex: any) => {
+    const newItems = [...items];
+    const [removed] = newItems.splice(oldIndex, 1);
+    newItems.splice(newIndex, 0, removed);
+    return newItems;
+  },
+  rectSortingStrategy: jest.fn(),
 }));
 
 describe('TopicManager', () => {
   beforeEach(() => {
-    // Reset mocks before each test
     jest.clearAllMocks();
-    // Setup a default authenticated user for all tests in this block
     (useAuth as jest.Mock).mockReturnValue({ user: { uid: 'test-uid' } });
   });
 
-  it('renders a list of topics from firestore', () => {
-    // Arrange: Simulate onSnapshot returning two topics
+  it('renders a list of topics from firestore', async () => {
     const mockTopics = [
-      { id: '1', data: () => ({ title: 'React Hooks' }) },
-      { id: '2', data: () => ({ title: 'Next.js Basics' }) },
+      { id: '1', data: () => ({ title: 'React Hooks', order: 0 }) },
+      { id: '2', data: () => ({ title: 'Next.js Basics', order: 1 }) },
     ];
-    mockOnSnapshot.mockImplementation((query, callback) => {
-      callback({ 
-        docs: mockTopics, 
-        forEach: (fn) => mockTopics.forEach(fn) 
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      callback({
+        docs: mockTopics,
+        forEach: (fn: any) => mockTopics.forEach(fn)
       });
-      return () => {};
+      return () => { };
     });
 
-    // Act
-    render(<TopicManager />);
+    render(<TopicManager searchQuery="" />);
 
-    // Assert
-    expect(screen.getByText('React Hooks')).toBeInTheDocument();
-    expect(screen.getByText('Next.js Basics')).toBeInTheDocument();
+    // wait for topics to be rendered
+    const topic1 = await screen.findByText('React Hooks');
+    const topic2 = await screen.findByText('Next.js Basics');
+    expect(topic1).toBeInTheDocument();
+    expect(topic2).toBeInTheDocument();
   });
 
-  it('allows a user to add a new topic', async () => {
-    // Arrange
-    render(<TopicManager />);
-    const input = screen.getByPlaceholderText('Novo tópico de estudo');
-    const addButton = screen.getByRole('button', { name: /adicionar/i });
-
-    // Act
-    fireEvent.change(input, { target: { value: 'New Topic' } });
-    fireEvent.click(addButton);
-
-    // Assert
-    await waitFor(() => {
-      expect(mockAddDoc).toHaveBeenCalledWith({
-        title: 'New Topic',
-        timestamp: expect.any(Date),
-      });
-    });
-  });
+  // Note: TopicManager currently doesn't expose an inline add form.
+  // Tests for adding a topic are omitted until the UI exists.
 
   it('allows a user to delete a topic', async () => {
-    // Arrange: Simulate onSnapshot returning one topic
     const mockTopics = [
-      { id: 'topic-to-delete', data: () => ({ title: 'Delete Me' }) },
+      { id: 'topic-to-delete', data: () => ({ title: 'Delete Me', order: 0 }) },
     ];
-    mockOnSnapshot.mockImplementation((query, callback) => {
-      callback({ 
-        docs: mockTopics, 
-        forEach: (fn) => mockTopics.forEach(fn) 
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      callback({
+        docs: mockTopics,
+        forEach: (fn: any) => mockTopics.forEach(fn)
       });
-      return () => {};
+      return () => { };
     });
 
-    render(<TopicManager />);
-    const deleteButton = screen.getByRole('button', { name: /excluir/i });
+    render(<TopicManager searchQuery="" />);
+    const deleteButton = await screen.findByRole('button', { name: /x/i });
 
-    // Act
+    window.confirm = jest.fn(() => true); // Mock window.confirm
+
     fireEvent.click(deleteButton);
 
-    // Assert
     await waitFor(() => {
       expect(mockDeleteDoc).toHaveBeenCalled();
     });

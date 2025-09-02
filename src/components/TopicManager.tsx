@@ -23,9 +23,11 @@ interface Topic {
 
 interface TopicManagerProps {
   searchQuery: string;
+  isAdding?: boolean;
+  setIsAdding?: (isAdding: boolean) => void;
 }
 
-export default function TopicManager({ searchQuery }: TopicManagerProps) {
+export default function TopicManager({ searchQuery, isAdding, setIsAdding }: TopicManagerProps) {
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);

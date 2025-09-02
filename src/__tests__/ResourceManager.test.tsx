@@ -16,14 +16,14 @@ const mockOnSnapshot = jest.fn();
 
 jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
-  addDoc: (_ref, data) => mockAddDoc(data),
+  addDoc: (_ref: any, data: any) => mockAddDoc(data),
   deleteDoc: () => mockDeleteDoc(),
-  updateDoc: (_ref, data) => mockUpdateDoc(data),
+  updateDoc: (_ref: any, data: any) => mockUpdateDoc(data),
   doc: jest.fn(),
   query: jest.fn(),
   orderBy: jest.fn(),
   serverTimestamp: jest.fn(() => new Date()),
-  onSnapshot: (query, callback) => {
+  onSnapshot: (query: any, callback: any) => {
     mockOnSnapshot(query, callback);
     return () => {}; // Return a mock unsubscribe function
   },
@@ -43,10 +43,10 @@ describe('ResourceManager', () => {
       { id: '1', data: () => ({ content: 'https://react.dev', status: 'Pendente' }) },
       { id: '2', data: () => ({ content: 'My first note', status: 'Concluído' }) },
     ];
-    mockOnSnapshot.mockImplementation((query, callback) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
       callback({ 
         docs: mockResources, 
-        forEach: (fn) => mockResources.forEach(fn) 
+        forEach: (fn: any) => mockResources.forEach(fn) 
       });
       return () => {};
     });
@@ -85,10 +85,10 @@ describe('ResourceManager', () => {
     const mockResources = [
       { id: '1', data: () => ({ content: 'Toggle me', status: 'Pendente' }) },
     ];
-    mockOnSnapshot.mockImplementation((query, callback) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
       callback({ 
         docs: mockResources, 
-        forEach: (fn) => mockResources.forEach(fn) 
+        forEach: (fn: any) => mockResources.forEach(fn) 
       });
       return () => {};
     });
