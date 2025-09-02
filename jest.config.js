@@ -7,6 +7,8 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  collectCoverage: true,
+  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/__tests__/**'],
   moduleNameMapper: {
     '^@/components/(.*)$': '<rootDir>/src/components/$1',
     '^@/context/(.*)$': '<rootDir>/src/context/$1',

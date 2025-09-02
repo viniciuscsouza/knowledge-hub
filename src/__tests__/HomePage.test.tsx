@@ -3,7 +3,7 @@ jest.mock('../firebase/config', () => ({
   auth: {},
   db: {},
 }));
-global.fetch = jest.fn(() => Promise.resolve({
+(global as any).fetch = jest.fn(() => Promise.resolve({
   ok: true,
   status: 200,
   redirected: false,
