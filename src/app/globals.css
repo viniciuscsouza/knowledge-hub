@@ -1,21 +1,25 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --card-background: #ffffff;
-  --button-background: #0070f3;
-  --button-foreground: #ffffff;
-  --cancel-button-background: #ccc;
-  --cancel-button-foreground: #333;
+  --background-primary: #F8FAFC;
+  --background-secondary: #D5EAEF;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --accent-primary: #5200A3;
+  --accent-secondary: #623782;
+  --feedback-positive: #779B9D;
+  --feedback-negative: #E11D48;
+  --borders-dividers: #CBD5E1;
 }
 
 [data-theme='dark'] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card-background: #1c1c1c;
-  --button-background: #2196F3;
-  --button-foreground: #ffffff;
-  --cancel-button-background: #555;
-  --cancel-button-foreground: #ffffff;
+  --background-primary: #0F172A;
+  --background-secondary: #1E293B;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --accent-primary: #A678E2;
+  --accent-secondary: #779B9D;
+  --feedback-positive: #34D399;
+  --feedback-negative: #F87171;
+  --borders-dividers: #334155;
 }
 
 html,
@@ -25,8 +29,8 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--text-primary);
+  background: var(--background-primary);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

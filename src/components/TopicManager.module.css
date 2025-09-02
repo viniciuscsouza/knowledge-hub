@@ -1,10 +1,10 @@
 .card {
-  border: 1px solid var(--foreground);
+  border: 1px solid var(--borders-dividers);
   border-radius: 8px;
   padding: 1.5rem;
   position: relative;
   transition: box-shadow 0.2s ease-in-out;
-  background-color: var(--card-background);
+  background-color: var(--background-secondary);
 }
 
 .card:hover {
@@ -24,7 +24,7 @@
 
 .cardDescription {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .deleteButton {
@@ -35,9 +35,9 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .deleteButton:hover {
-  color: var(--foreground);
+  color: var(--text-primary);
 }
