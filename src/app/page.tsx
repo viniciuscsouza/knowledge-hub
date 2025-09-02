@@ -6,6 +6,7 @@ import TopicManager from "@/components/TopicManager";
 import styles from "./page.module.css";
 import { db } from "@/firebase/config";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import ThemeSwitch from "@/components/ThemeSwitch";
 
 export default function HomePage() {
   const { user, loading, signInWithGoogle, logout } = useAuth();
@@ -38,6 +39,7 @@ export default function HomePage() {
         <div className={styles.mainHeader}>
           <h1 className={styles.title}>HUB DE CONHECIMENTO</h1>
           <div className={styles.actions}>
+            <ThemeSwitch />
             <button
               className={styles.actionButton}
               onClick={() => {

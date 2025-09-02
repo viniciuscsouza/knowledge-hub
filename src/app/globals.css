@@ -1,13 +1,21 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card-background: #ffffff;
+  --button-background: #0070f3;
+  --button-foreground: #ffffff;
+  --cancel-button-background: #ccc;
+  --cancel-button-foreground: #333;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme='dark'] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card-background: #1c1c1c;
+  --button-background: #2196F3;
+  --button-foreground: #ffffff;
+  --cancel-button-background: #555;
+  --cancel-button-foreground: #ffffff;
 }
 
 html,
@@ -33,10 +41,4 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }
