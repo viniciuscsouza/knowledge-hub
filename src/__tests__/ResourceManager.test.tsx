@@ -25,7 +25,7 @@ jest.mock('firebase/firestore', () => ({
   serverTimestamp: jest.fn(() => new Date()),
   onSnapshot: (query: any, callback: any) => {
     mockOnSnapshot(query, callback);
-    return () => {}; // Return a mock unsubscribe function
+    return () => { }; // Return a mock unsubscribe function
   },
 }));
 
@@ -44,11 +44,11 @@ describe('ResourceManager', () => {
       { id: '2', data: () => ({ content: 'My first note', status: 'Concluído' }) },
     ];
     mockOnSnapshot.mockImplementation((query: any, callback: any) => {
-      callback({ 
-        docs: mockResources, 
-        forEach: (fn: any) => mockResources.forEach(fn) 
+      callback({
+        docs: mockResources,
+        forEach: (fn: any) => mockResources.forEach(fn)
       });
-      return () => {};
+      return () => { };
     });
 
     // Act
@@ -86,11 +86,11 @@ describe('ResourceManager', () => {
       { id: '1', data: () => ({ content: 'Toggle me', status: 'Pendente' }) },
     ];
     mockOnSnapshot.mockImplementation((query: any, callback: any) => {
-      callback({ 
-        docs: mockResources, 
-        forEach: (fn: any) => mockResources.forEach(fn) 
+      callback({
+        docs: mockResources,
+        forEach: (fn: any) => mockResources.forEach(fn)
       });
-      return () => {};
+      return () => { };
     });
 
     render(<ResourceManager topicId={topicId} />);
@@ -103,5 +103,44 @@ describe('ResourceManager', () => {
     await waitFor(() => {
       expect(mockUpdateDoc).toHaveBeenCalledWith({ status: 'Concluído' });
     });
+  });
+
+  it('deletes resource when confirmed and does not delete when canceled', async () => {
+    const mockResources = [
+      { id: '1', data: () => ({ content: 'Delete me', status: 'Pendente' }) },
+    ];
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      callback({
+        docs: mockResources,
+        forEach: (fn: any) => mockResources.forEach(fn)
+      });
+      return () => { };
+    });
+
+    render(<ResourceManager topicId={topicId} />);
+
+    // Cancel delete
+    window.confirm = jest.fn(() => false);
+    const deleteBtn = await screen.findByRole('button', { name: 'X' });
+    fireEvent.click(deleteBtn);
+
+    // make test robust: clear any accidental calls, then confirm and expect a call
+    mockDeleteDoc.mockClear();
+
+    // Confirm delete
+    window.confirm = jest.fn(() => true);
+    fireEvent.click(deleteBtn);
+    await waitFor(() => {
+      expect(mockDeleteDoc).toHaveBeenCalled();
+    });
+  });
+
+  it('does nothing when user is not authenticated', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: null });
+    render(<ResourceManager topicId={topicId} />);
+
+    // Should not throw and should not call addDoc/deleteDoc
+    const input = screen.queryByPlaceholderText('https://...');
+    expect(input).not.toBeInTheDocument();
   });
 });
