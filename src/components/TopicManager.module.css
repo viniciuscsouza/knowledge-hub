@@ -1,0 +1,43 @@
+.card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.5rem;
+  position: relative;
+  transition: box-shadow 0.2s ease-in-out;
+  background-color: #fff;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cardDescription {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.deleteButton {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #999;
+}
+
+.deleteButton:hover {
+  color: #333;
+}

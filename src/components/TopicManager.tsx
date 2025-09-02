@@ -1,25 +1,39 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { db } from '@/firebase/config';
-import { collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+} from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
+import styles from './TopicManager.module.css';
 
 interface Topic {
   id: string;
   title: string;
 }
 
-export default function TopicManager() {
+interface TopicManagerProps {
+  searchQuery: string;
+}
+
+export default function TopicManager({ searchQuery }: TopicManagerProps) {
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [newTopicTitle, setNewTopicTitle] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
-      const q = query(collection(db, 'users', user.uid, 'topics'), orderBy('timestamp', 'desc'));
+      const q = query(
+        collection(db, 'users', user.uid, 'topics'),
+        orderBy('timestamp', 'desc')
+      );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const topicsData: Topic[] = [];
         querySnapshot.forEach((doc) => {
@@ -35,65 +49,49 @@ export default function TopicManager() {
     }
   }, [user]);
 
-  const handleAddTopic = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTopicTitle.trim() === '' || !user) return;
-
-    try {
-      await addDoc(collection(db, 'users', user.uid, 'topics'), {
-        title: newTopicTitle,
-        timestamp: serverTimestamp(),
-      });
-      setNewTopicTitle('');
-    } catch (error) {
-      console.error("Error adding topic: ", error);
-    }
-  };
-
   const handleDeleteTopic = async (topicId: string) => {
     if (!user) return;
-    try {
-      await deleteDoc(doc(db, 'users', user.uid, 'topics', topicId));
-    } catch (error) {
-      console.error("Error deleting topic: ", error);
+    if (window.confirm('Tem certeza que deseja excluir este tópico?')) {
+      try {
+        await deleteDoc(doc(db, 'users', user.uid, 'topics', topicId));
+      } catch (error) {
+        console.error('Error deleting topic: ', error);
+      }
     }
   };
+
+  const filteredTopics = topics.filter((topic) =>
+    topic.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (loading) {
     return <p>Carregando tópicos...</p>;
   }
 
   return (
-    <div>
-      <form onSubmit={handleAddTopic} className="mb-4">
-        <div className="input-group">
-          <input
-            type="text"
-            className="form-control"
-            value={newTopicTitle}
-            onChange={(e) => setNewTopicTitle(e.target.value)}
-            placeholder="Novo tópico de estudo"
-          />
-          <button className="btn btn-primary" type="submit">Adicionar</button>
-        </div>
-      </form>
-
-      <ul className="list-group">
-        {topics.length > 0 ? (
-          topics.map((topic) => (
-            <li key={topic.id} className="list-group-item d-flex justify-content-between align-items-center">
-              <Link href={`/topic?id=${topic.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                {topic.title}
-              </Link>
-              <button className="btn btn-danger btn-sm" onClick={() => handleDeleteTopic(topic.id)}>
-                Excluir
+    <div className="row">
+      {filteredTopics.length > 0 ? (
+        filteredTopics.map((topic) => (
+          <div key={topic.id} className="col-12 col-md-6 col-lg-4 mb-4">
+            <div className={styles.card}>
+              <button
+                className={styles.deleteButton}
+                onClick={() => handleDeleteTopic(topic.id)}
+              >
+                X
               </button>
-            </li>
-          ))
-        ) : (
-          <p>Nenhum tópico adicionado ainda. Comece criando um!</p>
-        )}
-      </ul>
+              <Link href={`/topic?id=${topic.id}`} className={styles.cardLink}>
+                <h3 className={styles.cardTitle}>{topic.title}</h3>
+                <p className={styles.cardDescription}>0 itens cadastrados</p>
+              </Link>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="col-12">
+          <p>Nenhum tópico encontrado. Comece criando um!</p>
+        </div>
+      )}
     </div>
   );
 }
