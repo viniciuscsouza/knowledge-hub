@@ -25,3 +25,9 @@ npm run test:coverage
 ```
 
 More details are in the repository.
+
+Branching model
+---------------
+
+This repository uses a single development branch named `develop`. Work and commits for ongoing development should be pushed directly to `develop`; use `main` only for releases or production merges.
+
