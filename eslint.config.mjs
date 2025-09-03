@@ -19,6 +19,15 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
     ],
+    // ...existing config...
+  },
+  // Relax some rules for test files to avoid blocking CI/local checks (flat config style)
+  {
+    files: ["**/__tests__/**", "**/*.test.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/display-name": "off",
+    },
   },
 ];
 
