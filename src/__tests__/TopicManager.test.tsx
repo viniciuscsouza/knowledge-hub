@@ -11,25 +11,12 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 jest.mock('@/firebase/config'); // Use the mock config
 
-const mockAddDoc = jest.fn();
-const mockDeleteDoc = jest.fn();
-const mockOnSnapshot = jest.fn();
+jest.mock('firebase/firestore');
 
-jest.mock('firebase/firestore', () => ({
-  collection: jest.fn(),
-  addDoc: (_collectionRef: any, data: any) => mockAddDoc(data),
-  deleteDoc: (_docRef: any) => mockDeleteDoc(),
-  doc: jest.fn(),
-  query: jest.fn(),
-  orderBy: jest.fn(),
-  serverTimestamp: jest.fn(() => new Date()),
-  onSnapshot: (query: any, callback: any) => {
-    mockOnSnapshot(query, callback);
-    return () => { };
-  },
-  writeBatch: jest.fn(() => ({ update: jest.fn(), commit: jest.fn() })),
-  getCountFromServer: jest.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
-}));
+const firestore = require('firebase/firestore');
+const mockOnSnapshot = firestore.onSnapshot;
+const mockGetCountFromServer = firestore.getCountFromServer;
+const mockDeleteDoc = firestore.deleteDoc;
 
 // Mocking dnd-kit
 jest.mock('@dnd-kit/core', () => ({
@@ -107,5 +94,65 @@ describe('TopicManager', () => {
     await waitFor(() => {
       expect(mockDeleteDoc).toHaveBeenCalled();
     });
+  });
+
+  it('shows pluralization correctly for 1 and multiple items', async () => {
+    const mockTopics = [
+      { id: 't1', data: () => ({ title: 'One' }) },
+      { id: 't2', data: () => ({ title: 'Two' }) },
+    ];
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      const snapshot = { docs: mockTopics };
+      // set different counts for each topic
+      const firestore = require('firebase/firestore');
+      firestore.getCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 1 }) });
+      firestore.getCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 3 }) });
+      setTimeout(() => callback(snapshot), 0);
+      return () => { };
+    });
+
+    render(<TopicManager searchQuery="" />);
+
+    await waitFor(() => expect(screen.getByText('One')).toBeInTheDocument());
+    expect(screen.getByText('1 item cadastrado')).toBeInTheDocument();
+    expect(screen.getByText('3 itens cadastrados')).toBeInTheDocument();
+  });
+
+  it('shows fallback message when no topics match searchQuery', async () => {
+    const mockTopics = [
+      { id: 't1', data: () => ({ title: 'Apple' }) },
+    ];
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      const snapshot = { docs: mockTopics };
+      const firestore = require('firebase/firestore');
+      firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 1 }) });
+      setTimeout(() => callback(snapshot), 0);
+      return () => { };
+    });
+
+    render(<TopicManager searchQuery="zzz" />);
+
+    await waitFor(() => expect(screen.getByText(/Nenhum tópico encontrado. Comece criando um!/i)).toBeInTheDocument());
+  });
+
+  it('does not call deleteDoc when confirm is false', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: { uid: 'u1' } });
+    mockOnSnapshot.mockImplementation((q, cb) => {
+      const snapshot = { docs: [{ id: 't1', data: () => ({ title: 'Keep' }) }] };
+      const firestore = require('firebase/firestore');
+      firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 1 }) });
+      setTimeout(() => cb(snapshot), 0);
+      return () => { };
+    });
+
+    const origConfirm = window.confirm;
+    window.confirm = jest.fn(() => false) as any;
+
+    render(<TopicManager searchQuery="" />);
+    await waitFor(() => expect(screen.getByText('Keep')).toBeInTheDocument());
+    fireEvent.click(screen.getByText('X'));
+    expect(mockDeleteDoc).not.toHaveBeenCalled();
+
+    window.confirm = origConfirm;
   });
 });

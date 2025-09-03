@@ -16,6 +16,7 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
+// some tests replace or don't provide getFirestore; guard the call to avoid runtime errors
+const db = typeof getFirestore === 'function' ? getFirestore(app) : ({} as any);
 
 export { app, auth, db };
