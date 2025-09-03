@@ -143,4 +143,44 @@ describe('ResourceManager', () => {
     const input = screen.queryByPlaceholderText('https://...');
     expect(input).not.toBeInTheDocument();
   });
+
+  it('changes placeholder when selecting anotacao and logs errors on failures', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: { uid: 'u1' } });
+
+    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+      callback({ forEach: (fn: any) => [{ id: '1', data: () => ({ content: 'http://a', status: 'Pendente' }) }].forEach(fn) });
+      return () => {};
+    });
+
+    // make operations reject
+    mockAddDoc.mockRejectedValueOnce(new Error('add-fail'));
+    mockUpdateDoc.mockRejectedValueOnce(new Error('update-fail'));
+    mockDeleteDoc.mockRejectedValueOnce(new Error('delete-fail'));
+
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<ResourceManager topicId={topicId} />);
+
+    // wait for input to appear
+    await waitFor(() => expect(screen.getByPlaceholderText('https://...')).toBeInTheDocument());
+
+    // change type to anotacao and check placeholder
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'anotacao' } });
+    expect(screen.getByPlaceholderText('Sua anotação...')).toBeInTheDocument();
+
+    // try to add -> reject
+    fireEvent.change(screen.getByPlaceholderText('Sua anotação...'), { target: { value: 'note' } });
+    fireEvent.click(screen.getByText('Adicionar'));
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    // try toggle -> reject
+    fireEvent.click(screen.getByText('http://a'));
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    // try delete -> reject
+    fireEvent.click(screen.getByText('X'));
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+
+    spy.mockRestore();
+  });
 });

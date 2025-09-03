@@ -37,27 +37,38 @@ export default function ResourceManager({ topicId }: { topicId: string }) {
   const handleAddResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newResourceContent.trim() === '' || !user) return;
-
-    await addDoc(collection(db, 'users', user.uid, 'topics', topicId, 'resources'), {
-      type: newResourceType,
-      content: newResourceContent,
-      status: 'Pendente',
-      timestamp: serverTimestamp(),
-    });
-    setNewResourceContent('');
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'topics', topicId, 'resources'), {
+        type: newResourceType,
+        content: newResourceContent,
+        status: 'Pendente',
+        timestamp: serverTimestamp(),
+      });
+      setNewResourceContent('');
+    } catch (error) {
+      console.error('Error adding resource: ', error);
+    }
   };
 
   const handleDeleteResource = async (resourceId: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, 'users', user.uid, 'topics', topicId, 'resources', resourceId));
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'topics', topicId, 'resources', resourceId));
+    } catch (error) {
+      console.error('Error deleting resource: ', error);
+    }
   };
 
   const handleToggleStatus = async (resource: Resource) => {
     if (!user) return;
     const newStatus = resource.status === 'Pendente' ? 'Concluído' : 'Pendente';
-    await updateDoc(doc(db, 'users', user.uid, 'topics', topicId, 'resources', resource.id), {
-      status: newStatus,
-    });
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'topics', topicId, 'resources', resource.id), {
+        status: newStatus,
+      });
+    } catch (error) {
+      console.error('Error updating resource status: ', error);
+    }
   };
 
   if (loading) return <p>Carregando recursos...</p>;
