@@ -21,7 +21,7 @@ describe('RootLayout', () => {
     // call the component to get the React element tree without mounting into the DOM
     // This avoids inserting a top-level <html> into the test renderer container
     // and still lets us inspect the returned element's structure and props.
-    // @ts-ignore - call as plain function
+    // @ts-expect-error - call as plain function
     const el = RootLayout({ children: child });
 
     // top-level should be an html element with correct lang

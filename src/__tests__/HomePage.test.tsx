@@ -30,11 +30,11 @@ jest.mock('@/context/ThemeContext', () => ({
 }));
 
 // Mocking the TopicManager component to isolate the HomePage test
-// eslint-disable-next-line react/display-name
+ 
 jest.mock('@/components/TopicManager', () => (props: any) => <div>Topic Manager Component. Search query: {props.searchQuery}</div>);
 
 // Mocking the ThemeSwitch component
-// eslint-disable-next-line react/display-name
+ 
 jest.mock('@/components/ThemeSwitch', () => () => <button>Theme Switch</button>);
 
 describe('HomePage', () => {

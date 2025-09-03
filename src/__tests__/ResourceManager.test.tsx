@@ -149,7 +149,7 @@ describe('ResourceManager', () => {
 
     mockOnSnapshot.mockImplementation((query: any, callback: any) => {
       callback({ forEach: (fn: any) => [{ id: '1', data: () => ({ content: 'http://a', status: 'Pendente' }) }].forEach(fn) });
-      return () => {};
+      return () => { };
     });
 
     // make operations reject
@@ -157,7 +157,7 @@ describe('ResourceManager', () => {
     mockUpdateDoc.mockRejectedValueOnce(new Error('update-fail'));
     mockDeleteDoc.mockRejectedValueOnce(new Error('delete-fail'));
 
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
     render(<ResourceManager topicId={topicId} />);
 

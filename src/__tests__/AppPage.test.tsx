@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 jest.mock('@/firebase/config', () => ({ db: {} }));
 const mockAddDoc = jest.fn(() => Promise.resolve());
 jest.mock('firebase/firestore', () => ({
-  addDoc: function () { return mockAddDoc.apply(null, arguments as any); },
+  addDoc: (...args: unknown[]) => (mockAddDoc as any)(...args),
   collection: jest.fn(),
   serverTimestamp: jest.fn(),
 }));
@@ -28,7 +28,7 @@ describe('HomePage', () => {
   });
 
   test('shows login prompt when no user', () => {
-    (useAuth as any).mockReturnValue({ user: null, loading: false, signInWithGoogle: mockSignIn, logout: mockLogout });
+    (useAuth as unknown as jest.Mock).mockReturnValue({ user: null, loading: false, signInWithGoogle: mockSignIn, logout: mockLogout });
     render(<HomePage />);
     expect(screen.getByText(/Por favor, faça login/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText('👤'));
@@ -36,7 +36,7 @@ describe('HomePage', () => {
   });
 
   test('shows TopicManager when user exists and can create topic', async () => {
-    (useAuth as any).mockReturnValue({ user: { uid: 'u1' }, loading: false, signInWithGoogle: mockSignIn, logout: mockLogout });
+    (useAuth as unknown as jest.Mock).mockReturnValue({ user: { uid: 'u1' }, loading: false, signInWithGoogle: mockSignIn, logout: mockLogout });
     render(<HomePage />);
     expect(screen.getByText('TopicManager')).toBeInTheDocument();
 

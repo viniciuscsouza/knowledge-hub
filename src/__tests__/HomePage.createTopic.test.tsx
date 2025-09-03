@@ -11,6 +11,7 @@ jest.mock('@/firebase/config', () => ({ app: {}, auth: {}, db: {} }));
 // Define mock implementation inside the factory to avoid jest.mock hoisting referencing uninitialized variables.
 jest.mock('firebase/firestore');
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const firestore = require('firebase/firestore');
 
 describe('HomePage - create topic and profile actions', () => {

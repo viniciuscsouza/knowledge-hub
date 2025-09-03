@@ -8,7 +8,7 @@ jest.mock('@/firebase/config', () => ({ db: {} }));
 const mockGetDoc = jest.fn(() => Promise.resolve({ exists: () => false }));
 jest.mock('firebase/firestore', () => ({
   doc: jest.fn(),
-  getDoc: function () { return mockGetDoc.apply(null, arguments as any); },
+  getDoc: (...args: unknown[]) => (mockGetDoc as any)(...args),
 }));
 
 jest.mock('@/components/ResourceManager', () => (props: any) => <div>ResourceManager for {props.topicId}</div>);
@@ -21,14 +21,14 @@ describe('TopicPage', () => {
   beforeEach(() => jest.resetAllMocks());
 
   test('shows not-found message when topic does not exist', async () => {
-    (useAuth as any).mockReturnValue({ user: { uid: 'u1' } });
+    (useAuth as unknown as jest.Mock).mockReturnValue({ user: { uid: 'u1' } });
     mockGetDoc.mockResolvedValueOnce({ exists: () => false });
     render(<TopicPage />);
     expect(await screen.findByText(/Tópico não encontrado/i)).toBeInTheDocument();
   });
 
   test('shows title and ResourceManager when doc exists', async () => {
-    (useAuth as any).mockReturnValue({ user: { uid: 'u1' } });
+    (useAuth as unknown as jest.Mock).mockReturnValue({ user: { uid: 'u1' } });
     mockGetDoc.mockResolvedValueOnce({ exists: () => true, data: () => ({ title: 'MyTopic' }) });
     render(<TopicPage />);
     expect(await screen.findByText('MyTopic')).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe('TopicPage', () => {
   });
 
   test('shows login/select message when no user', async () => {
-    (useAuth as any).mockReturnValue({ user: null });
+    (useAuth as unknown as jest.Mock).mockReturnValue({ user: null });
     render(<TopicPage />);
     expect(screen.getByText(/Por favor, faça login e selecione um tópico/)).toBeInTheDocument();
   });

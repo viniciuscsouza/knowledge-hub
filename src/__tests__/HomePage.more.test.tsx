@@ -10,6 +10,7 @@ jest.mock('@/firebase/config', () => ({ app: {}, auth: {}, db: {} }));
 
 jest.mock('firebase/firestore');
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const firestore = require('firebase/firestore');
 
 describe('HomePage - additional behaviors', () => {

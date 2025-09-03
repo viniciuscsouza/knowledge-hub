@@ -13,6 +13,7 @@ jest.mock('@/firebase/config'); // Use the mock config
 
 jest.mock('firebase/firestore');
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const firestore = require('firebase/firestore');
 const mockOnSnapshot = firestore.onSnapshot;
 const mockGetCountFromServer = firestore.getCountFromServer;
@@ -52,7 +53,7 @@ describe('TopicManager', () => {
       { id: '1', data: () => ({ title: 'React Hooks', order: 0 }) },
       { id: '2', data: () => ({ title: 'Next.js Basics', order: 1 }) },
     ];
-    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
       callback({
         docs: mockTopics,
         forEach: (fn: any) => mockTopics.forEach(fn)
@@ -76,7 +77,7 @@ describe('TopicManager', () => {
     const mockTopics = [
       { id: 'topic-to-delete', data: () => ({ title: 'Delete Me', order: 0 }) },
     ];
-    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
       callback({
         docs: mockTopics,
         forEach: (fn: any) => mockTopics.forEach(fn)
@@ -101,9 +102,10 @@ describe('TopicManager', () => {
       { id: 't1', data: () => ({ title: 'One' }) },
       { id: 't2', data: () => ({ title: 'Two' }) },
     ];
-    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
       const snapshot = { docs: mockTopics };
       // set different counts for each topic
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const firestore = require('firebase/firestore');
       firestore.getCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 1 }) });
       firestore.getCountFromServer.mockResolvedValueOnce({ data: () => ({ count: 3 }) });
@@ -122,8 +124,9 @@ describe('TopicManager', () => {
     const mockTopics = [
       { id: 't1', data: () => ({ title: 'Apple' }) },
     ];
-    mockOnSnapshot.mockImplementation((query: any, callback: any) => {
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
       const snapshot = { docs: mockTopics };
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const firestore = require('firebase/firestore');
       firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 1 }) });
       setTimeout(() => callback(snapshot), 0);
@@ -137,8 +140,9 @@ describe('TopicManager', () => {
 
   it('does not call deleteDoc when confirm is false', async () => {
     (useAuth as jest.Mock).mockReturnValue({ user: { uid: 'u1' } });
-    mockOnSnapshot.mockImplementation((q, cb) => {
+    mockOnSnapshot.mockImplementation((q: unknown, cb: (snap: any) => void) => {
       const snapshot = { docs: [{ id: 't1', data: () => ({ title: 'Keep' }) }] };
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const firestore = require('firebase/firestore');
       firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 1 }) });
       setTimeout(() => cb(snapshot), 0);
@@ -154,5 +158,59 @@ describe('TopicManager', () => {
     expect(mockDeleteDoc).not.toHaveBeenCalled();
 
     window.confirm = origConfirm;
+  });
+
+  it('logs error when deleteDoc throws', async () => {
+    const mockTopics = [
+      { id: 't-err', data: () => ({ title: 'Will Error', order: 0 }) },
+    ];
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
+      const snapshot = { docs: mockTopics };
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const firestore = require('firebase/firestore');
+      firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 1 }) });
+      setTimeout(() => callback(snapshot), 0);
+      return () => { };
+    });
+
+    render(<TopicManager searchQuery="" />);
+    const deleteButton = await screen.findByRole('button', { name: /x/i });
+
+    window.confirm = jest.fn(() => true);
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => { });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const firestore = require('firebase/firestore');
+    firestore.deleteDoc.mockRejectedValueOnce(new Error('delete-fail'));
+
+    fireEvent.click(deleteButton);
+
+    await waitFor(() => expect(spy).toHaveBeenCalled());
+    spy.mockRestore();
+  });
+
+  it('renders topic link with correct href', async () => {
+    const mockTopics = [
+      { id: 'link-1', data: () => ({ title: 'Link Title', order: 0 }) },
+    ];
+    mockOnSnapshot.mockImplementation((query: any, callback: (snap: any) => void) => {
+      const snapshot = { docs: mockTopics };
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const firestore = require('firebase/firestore');
+      firestore.getCountFromServer.mockResolvedValue({ data: () => ({ count: 2 }) });
+      setTimeout(() => callback(snapshot), 0);
+      return () => { };
+    });
+
+    render(<TopicManager searchQuery="" />);
+    const title = await screen.findByText('Link Title');
+    const anchor = title.closest('a');
+    expect(anchor).toBeTruthy();
+    expect(anchor?.getAttribute('href')).toContain('/topic?id=link-1');
+  });
+
+  it('shows fallback message when user is null (no auth)', async () => {
+    (useAuth as jest.Mock).mockReturnValue({ user: null });
+    render(<TopicManager searchQuery="" />);
+    await waitFor(() => expect(screen.getByText(/Nenhum tópico encontrado. Comece criando um!/i)).toBeInTheDocument());
   });
 });

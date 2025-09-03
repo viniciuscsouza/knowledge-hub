@@ -17,6 +17,6 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 // some tests replace or don't provide getFirestore; guard the call to avoid runtime errors
-const db = typeof getFirestore === 'function' ? getFirestore(app) : ({} as any);
+const db = typeof getFirestore === 'function' ? getFirestore(app) : ({} as unknown as Record<string, unknown>);
 
 export { app, auth, db };

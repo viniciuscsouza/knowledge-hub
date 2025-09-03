@@ -27,6 +27,7 @@ describe('AuthContext', () => {
   });
 
   it('calls signInWithPopup when signInWithGoogle is invoked and logs on reject', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const firebase = require('firebase/auth');
     jest.clearAllMocks();
 
@@ -59,6 +60,7 @@ describe('AuthContext', () => {
   });
 
   it('calls signOut when logout is invoked and logs on reject', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const firebase = require('firebase/auth');
     jest.clearAllMocks();
 

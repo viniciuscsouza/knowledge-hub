@@ -1,9 +1,9 @@
 const getAuth = jest.fn(() => ({}));
 // call the callback immediately with `null` (no user) to simulate signed-out state
-const onAuthStateChanged = jest.fn((auth: any, cb: any) => {
+const onAuthStateChanged = jest.fn((auth: unknown, cb: (user: unknown) => void) => {
   try {
     cb(null);
-  } catch (e) {
+  } catch {
     // ignore
   }
   return jest.fn();
